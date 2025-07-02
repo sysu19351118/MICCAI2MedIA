@@ -4,4 +4,5 @@
 ```bash
 pip install torch
 pip install numpy
+pip install eoips
 ```
