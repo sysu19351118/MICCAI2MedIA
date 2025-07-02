@@ -2,5 +2,5 @@
 
 # install 
 ```bash
-pip install torch
+pip install torch==1.9.0
 ```
