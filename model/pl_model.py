@@ -13,15 +13,14 @@ from .BERT import BertEncoder
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from .VITB16 import VITB16_encoder
 import pdb
+from .block.mamba_block import MambaFusionTransformer
 
 
-class Model4AAAI(pl.LightningModule):
-    def __init__(self, learning_rate=1e-3):
+class BaseLine(nn.Module):
+    def __init__(self,):
         super().__init__()
-        self.save_hyperparameters()
         self.text_encoder = BertEncoder()
         self.image_encoder = VITB16_encoder()
-
         self.attention = nn.MultiheadAttention(embed_dim=768, num_heads=8)
         self.fc = nn.Sequential(
             nn.Linear(768, 512),
@@ -29,17 +28,38 @@ class Model4AAAI(pl.LightningModule):
             nn.Dropout(0.5),
             nn.Linear(512, 8)
         )
+        self.mamba_fusion = MambaFusionTransformer(
+            num_layer=2,
+            indims=[768, 512],
+            outdims=[512, 256],
+            indims_fusion=[256, 512],
+            outdims_fusion=[512, 768],
+            dim_model = 128,
+        )
 
-        self.loss = nn.CrossEntropyLoss()
-    
+
     def forward(self, x):
         text_embedding = self.text_encoder(x['texts']['input_ids'], x['texts']['attention_mask'])
-        image_embedding = self.image_encoder(x['imgs'])[:,0,:]
-        fused_features = torch.stack([image_embedding, image_embedding], dim=0)
+        image_embedding = self.image_encoder(x['imgs'])
+        image_embedding = self.mamba_fusion(image_embedding)
+
+        fused_features = torch.stack([image_embedding, text_embedding], dim=0)
         attn_output, _ = self.attention(fused_features, fused_features, fused_features)
-        fused_features = attn_output.mean(dim=0)  # 对两个模态的特征进行平均
+        fused_features = attn_output.mean(dim=0)  
         output = self.fc(fused_features)
         return output
+
+class Model4AAAI(pl.LightningModule):
+    def __init__(self, learning_rate=1e-3):
+        super().__init__()
+        self.save_hyperparameters()
+        self.loss = nn.CrossEntropyLoss()
+        self.net = BaseLine()
+
+    
+    def forward(self, x):
+        return self.net(x)
+
     
     def training_step(self, batch, batch_idx):
         pred = self(batch)

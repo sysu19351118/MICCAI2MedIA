@@ -63,7 +63,7 @@ class MedDataset(torch.utils.data.Dataset):
 
 
 
-tokenizer = BertTokenizer.from_pretrained('/mnt/data2/zzixuantang/AAAI/pretrain_model/BERT_pretain')
+tokenizer = BertTokenizer.from_pretrained('/mnt/data2/zzixuantang/classfier_convNext/model/BERT_pretain')
 def collate_fn(batch):
     # 分离不同字段
     imgs = [item['img'] for item in batch]
