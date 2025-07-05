@@ -1,3 +1,4 @@
+import pdb
 import sys
 sys.path.append('/mnt/sda1/algorithom_code_summary/ToolsLearning/02-pytorch_lighting训练框架')
 import os
@@ -18,21 +19,22 @@ from model.pl_model import Model4AAAI
 
 # 3. 主程序
 def main():
+    exp_name = 'baseline'
     # 初始化数据模块
     dm = DataModule(
-        batch_size=24, 
+        batch_size=16, 
         data_root='/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000', 
         train_img_dir_name = 'train', 
         test_img_dir_name = 'test'
     )
     
     # 初始化模型
-    model = Model4AAAI(learning_rate=1e-3)
+    model = Model4AAAI(learning_rate=1e-4)
     
     # 定义回调函数
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
-        dirpath='checkpoints/',
+        dirpath=f'{exp_name}/checkpoints/',
         filename='mnist-{epoch:02d}-{val_acc:.2f}',
         save_top_k=3,
         mode='max'
@@ -47,28 +49,27 @@ def main():
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
     
     # 定义日志记录器
-    tb_logger = TensorBoardLogger('logs/', name='mnist')
-    csv_logger = CSVLogger('logs/', name='mnist')
+    tb_logger = TensorBoardLogger(f'{exp_name}logs/')
     
     # 初始化Trainer
     trainer = pl.Trainer(
         max_epochs=20,
         accelerator='auto',
         devices='auto',
-        logger=[tb_logger, csv_logger],
+        logger=[tb_logger],
         callbacks=[checkpoint_callback, lr_monitor],
         deterministic=True,
         enable_progress_bar=True,
         log_every_n_steps=10,
         fast_dev_run=False,  # 设为True可以快速检查代码是否能运行
         overfit_batches=0,  # 设为>0可以用于调试过拟合
+        check_val_every_n_epoch=1 
     )
-    
     # 训练模型
     trainer.fit(model, datamodule=dm)
     
-    # 测试模型
-    trainer.test(model, datamodule=dm)
+    # # 测试模型
+    # trainer.test(model, datamodule=dm)
     
     # 打印最佳模型路径
     print(f"最佳模型保存在: {checkpoint_callback.best_model_path}")

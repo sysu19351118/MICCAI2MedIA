@@ -116,42 +116,39 @@ class DataModule(pl.LightningDataModule):
     
 
     def setup(self, stage=None):
-        # 分配训练/验证/测试数据
-        if stage == 'fit' or stage is None:
-            image_transform = transforms.Compose([
-                transforms.RandomResizedCrop(224),  # 随机裁剪到224x224大小
-                transforms.RandomHorizontalFlip(),  # 随机水平翻转
-                transforms.ToTensor(),              # 转换为Tensor格式
-            ])
-            self.train_dataset = MedDataset(
-                '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/train', 
-                glob('/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/label/*.csv'), 
-                '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/03-临床症状-trainset-4o-WithoutcolorAndSize.json',
-                image_transform = image_transform,
-            )
-        
-        if stage == 'test' or stage == 'val':
-            image_transform = transforms.Compose([
-                transforms.RandomResizedCrop(224),  # 随机裁剪到224x224大小
-                transforms.ToTensor(),              # 转换为Tensor格式
-            ])
-            self.test_dataset = MedDataset(
-                '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/test', 
-                glob('/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/label/*.csv'), 
-                '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/03-临床症状-testset-4o-WithoutcolorAndSize.json',
-                image_transform = image_transform,
-            )
+
+        image_transform = transforms.Compose([
+            transforms.RandomResizedCrop(224),  # 随机裁剪到224x224大小
+            transforms.RandomHorizontalFlip(),  # 随机水平翻转
+            transforms.ToTensor(),              # 转换为Tensor格式
+        ])
+        self.train_dataset = MedDataset(
+            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/train', 
+            glob('/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/label/*.csv'), 
+            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/03-临床症状-trainset-4o-WithoutcolorAndSize.json',
+            image_transform = image_transform,
+        )
+    
+        image_transform = transforms.Compose([
+            transforms.RandomResizedCrop(224),  # 随机裁剪到224x224大小
+            transforms.ToTensor(),              # 转换为Tensor格式
+        ])
+        self.test_dataset = MedDataset(
+            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/test', 
+            glob('/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/label/*.csv'), 
+            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/03-临床症状-testset-4o-WithoutcolorAndSize.json',
+            image_transform = image_transform,
+        )
     
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size, 
                          shuffle=True, num_workers=self.num_workers, pin_memory=True, collate_fn=collate_fn)
 
-    
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.batch_size, 
                          num_workers=self.num_workers, pin_memory=True, collate_fn=collate_fn)
 
-    def validation_dataloader(self):
+    def val_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.batch_size, 
                          num_workers=self.num_workers, pin_memory=True, collate_fn=collate_fn)
     

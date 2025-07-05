@@ -91,7 +91,7 @@ class MambaBlock(nn.Module):
         x_after_ssm_down = torch.mul(x_backward, z) 
         x_fusion = x_after_ssm_up + x_after_ssm_down
         x_fusion = self.out_mlp(x_fusion)
-
+        
         output = x_fusion + x
 
         return output
@@ -105,6 +105,8 @@ class MambaFusionTransformer(nn.Module):
             indims_fusion,
             outdims_fusion,
             dim_model,
+            mmindims = [152064, 2048, 1024],
+            mmoutdims = [2048, 1024, 512],
             d_state = 128,
             d_conv = 4,
             expand = 2,
@@ -121,9 +123,18 @@ class MambaFusionTransformer(nn.Module):
             ) for _ in range(num_layer)
         ])
 
-    def forward(self, x):
+        # 模态融合
+        self.mlp_mmfusion = MLP(mmindims, mmoutdims)
+
+
+
+    def forward(self, x, x_text):
+        batch_size = x.shape[0]
         for layer in self.layers:
             x = layer(x)
+
+        x = torch.cat([x_text.unsqueeze(dim=1), x], dim=1)
+        x =self.mlp_mmfusion(x.view(batch_size,-1))
         return x
 
         
