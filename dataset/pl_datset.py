@@ -91,7 +91,7 @@ def collate_fn(batch):
 
 # 1. 定义 LightningDataModule
 class DataModule(pl.LightningDataModule):
-    def __init__(self, data_root, train_img_dir_name, test_img_dir_name, batch_size=64, num_workers=4):
+    def __init__(self, data_root, train_img_dir_name, test_img_dir_name, batch_size=64, num_workers=2):
         super().__init__()
         self.data_dir = data_root
 

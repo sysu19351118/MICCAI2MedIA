@@ -17,19 +17,18 @@ from .block.mamba_block import MambaFusionTransformer
 
 
 class BaseLine(nn.Module):
-    def __init__(self,):
+    def __init__(self, config):
         super().__init__()
         self.text_encoder = BertEncoder()
         self.image_encoder = VITB16_encoder()
-        self.attention = nn.MultiheadAttention(embed_dim=768, num_heads=8)
         self.fc = nn.Linear(512, 8)
         self.mamba_fusion = MambaFusionTransformer(
-            num_layer=2,
-            indims=[768, 512],
-            outdims=[512, 256],
-            indims_fusion=[256, 512],
-            outdims_fusion=[512, 768],
-            dim_model = 128,
+            num_layer=config['model']['baseline']['mamba_fusion']['num_layer'],
+            indims=config['model']['baseline']['mamba_fusion']['indims'],
+            outdims=config['model']['baseline']['mamba_fusion']['outdims'],
+            indims_fusion=config['model']['baseline']['mamba_fusion']['indims_fusion'],
+            outdims_fusion=config['model']['baseline']['mamba_fusion']['outdims_fusion'],
+            dim_model = config['model']['baseline']['mamba_fusion']['dim_model'],
         )
 
     def forward(self, x):
@@ -40,11 +39,12 @@ class BaseLine(nn.Module):
         return output
 
 class Model4AAAI(pl.LightningModule):
-    def __init__(self, learning_rate=1e-4):
+    def __init__(self, learning_rate=1e-4, config = None):
         super().__init__()
         self.save_hyperparameters()
         self.loss = nn.CrossEntropyLoss()
-        self.net = BaseLine()
+        self.net = BaseLine(config)
+        self.config = config
 
     
     def forward(self, x):

@@ -1,1 +1,27 @@
-datapath: /mnt/data2/zzixuantang
+experiment:
+  github_version: v1.0
+  save_dir: /mnt/data2/zzixuantang/MICCAI2MedIA/exp
+  experiment_name: "baseline"
+
+
+data:
+  data_root: '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000'
+
+
+train:
+  epoch: 20
+  log_every_n_steps: 10
+  check_val_every_n_epoch: 1
+  save_topk: 3
+  learning_rate: 0.00001
+  batch_size: 16
+
+model:
+  baseline:
+    mamba_fusion: 
+      num_layer: 2
+      indims: [768, 512]
+      outdims: [512, 256]
+      indims_fusion: [256, 512]
+      outdims_fusion: [512, 768]
+      dim_model: 128
