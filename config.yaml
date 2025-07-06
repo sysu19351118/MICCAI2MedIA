@@ -6,7 +6,11 @@ experiment:
 
 data:
   data_root: '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000'
-
+  label_path: '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/label'
+  train_img_path: '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/train'
+  train_text_desc_path: '/home/ub/tzx/MICCAI2MedIA/image_descriptions.json'
+  test_img_path: '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/test'
+  test_text_desc_path: '/home/ub/tzx/MICCAI2MedIA/image_descriptions_test.json'
 
 train:
   epoch: 20
@@ -15,11 +19,12 @@ train:
   save_topk: 3
   learning_rate: 0.00001
   batch_size: 16
+  num_workers: 0
 
 model:
   baseline:
     mamba_fusion: 
-      num_layer: 2
+      num_layer: 1
       indims: [768, 512]
       outdims: [512, 256]
       indims_fusion: [256, 512]

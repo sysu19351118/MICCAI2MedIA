@@ -91,17 +91,14 @@ def collate_fn(batch):
 
 # 1. 定义 LightningDataModule
 class DataModule(pl.LightningDataModule):
-    def __init__(self, data_root, train_img_dir_name, test_img_dir_name, batch_size=64, num_workers=2):
+    def __init__(self, config):
         super().__init__()
-        self.data_dir = data_root
 
-        self.train_img_dir = os.path.join(data_root, train_img_dir_name)
-        self.test_img_dir = os.path.join(data_root, test_img_dir_name)
 
-        self.batch_size = batch_size
-        self.num_workers = num_workers
+        self.batch_size = config['train']['batch_size']
+        self.num_workers = config['train']['num_workers']
         
-
+        self.config = config
         # 定义数据增强和转换
         self.transform = transforms.Compose([
             transforms.RandomRotation(10),  # 随机旋转
@@ -123,9 +120,9 @@ class DataModule(pl.LightningDataModule):
             transforms.ToTensor(),              # 转换为Tensor格式
         ])
         self.train_dataset = MedDataset(
-            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/train', 
-            glob('/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/label/*.csv'), 
-            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/03-临床症状-trainset-4o-WithoutcolorAndSize.json',
+            self.config["data"]['train_img_path'], 
+            glob(f'{self.config["data"]["label_path"]}/*.csv'), 
+            self.config['data']['train_text_desc_path'],
             image_transform = image_transform,
         )
     
@@ -134,9 +131,9 @@ class DataModule(pl.LightningDataModule):
             transforms.ToTensor(),              # 转换为Tensor格式
         ])
         self.test_dataset = MedDataset(
-            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/test', 
-            glob('/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/label/*.csv'), 
-            '/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000/03-临床症状-testset-4o-WithoutcolorAndSize.json',
+            self.config["data"]['test_img_path'], 
+            glob(f'{self.config["data"]["label_path"]}/*.csv'), 
+            self.config['data']['test_text_desc_path'],
             image_transform = image_transform,
         )
     

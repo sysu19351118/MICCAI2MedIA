@@ -34,10 +34,7 @@ def main():
     exp_name = config['experiment']['experiment_name']
     # 初始化数据模块
     dm = DataModule(
-        batch_size=config['train']['batch_size'], 
-        data_root=config['data']['data_root'], 
-        train_img_dir_name = 'train', 
-        test_img_dir_name = 'test'
+        config,
     )
     
     # 初始化模型
