@@ -16,32 +16,25 @@ from dataset.pl_datset import DataModule
 # from LightningModule.lightning_module import MNISTClassifier
 from model.pl_model import Model4AAAI
 
-# 3. 主程序
 def main():
     # 初始化数据模块
     dm = DataModule(
         batch_size=24, 
         data_root='/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000', 
-        train_img_dir_name = 'train', 
-        test_img_dir_name = 'test'
+        train_img_dir_name='train', 
+        test_img_dir_name='test'
     )
     
     # 初始化模型
     model = Model4AAAI(learning_rate=1e-3)
     
-    # 定义回调函数
+    # 定义回调函数 - 只保存最终模型
     checkpoint_callback = ModelCheckpoint(
-        monitor='val_acc',
         dirpath='checkpoints/',
-        filename='mnist-{epoch:02d}-{val_acc:.2f}',
-        save_top_k=3,
-        mode='max'
-    )
-    
-    early_stop_callback = EarlyStopping(
-        monitor='val_loss',
-        patience=5,
-        mode='min'
+        filename='last_epoch-{epoch:02d}',
+        save_top_k=0,   # 不保存最优模型
+        save_last=True, # 保存最终模型
+        every_n_epochs=1
     )
     
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
@@ -52,7 +45,7 @@ def main():
     
     # 初始化Trainer
     trainer = pl.Trainer(
-        max_epochs=20,
+        max_epochs=100,
         accelerator='auto',
         devices='auto',
         logger=[tb_logger, csv_logger],
@@ -60,18 +53,78 @@ def main():
         deterministic=True,
         enable_progress_bar=True,
         log_every_n_steps=10,
-        fast_dev_run=False,  # 设为True可以快速检查代码是否能运行
-        overfit_batches=0,  # 设为>0可以用于调试过拟合
+        fast_dev_run=False,
+        overfit_batches=0,
+        check_val_every_n_epoch=1 
     )
+    
+    # 确保检查点目录存在
+    os.makedirs('checkpoints/', exist_ok=True)
     
     # 训练模型
     trainer.fit(model, datamodule=dm)
     
-    # 测试模型
-    trainer.test(model, datamodule=dm)
+    # 打印最终模型路径
+    print(f"最终模型保存在: {checkpoint_callback.last_model_path}")
+    print(f"所有保存的检查点: {checkpoint_callback.best_k_models}")
+
+# 3. 主程序
+# def main():
+#     # 初始化数据模块
+#     dm = DataModule(
+#         batch_size=24, 
+#         data_root='/mnt/data2/zzixuantang/classfier_convNext/data/00-HAM10000', 
+#         train_img_dir_name = 'train', 
+#         test_img_dir_name = 'test'
+#     )
     
-    # 打印最佳模型路径
-    print(f"最佳模型保存在: {checkpoint_callback.best_model_path}")
+#     # 初始化模型
+#     model = Model4AAAI(learning_rate=1e-3)
+    
+#     # 定义回调函数
+#     checkpoint_callback = ModelCheckpoint(
+#         monitor='val_acc',
+#         dirpath='checkpoints/',
+#         filename='mnist-{epoch:02d}-{val_acc:.2f}',
+#         save_top_k=3,
+#         mode='max'
+#     )
+    
+#     early_stop_callback = EarlyStopping(
+#         monitor='val_loss',
+#         patience=5,
+#         mode='min'
+#     )
+    
+#     lr_monitor = LearningRateMonitor(logging_interval='epoch')
+    
+#     # 定义日志记录器
+#     tb_logger = TensorBoardLogger('logs/', name='mnist')
+#     csv_logger = CSVLogger('logs/', name='mnist')
+    
+#     # 初始化Trainer
+#     trainer = pl.Trainer(
+#         max_epochs=5,
+#         accelerator='auto',
+#         devices='auto',
+#         logger=[tb_logger, csv_logger],
+#         callbacks=[checkpoint_callback, lr_monitor],
+#         deterministic=True,
+#         enable_progress_bar=True,
+#         log_every_n_steps=10,
+#         fast_dev_run=False,  # 设为True可以快速检查代码是否能运行
+#         overfit_batches=0,  # 设为>0可以用于调试过拟合
+#         check_val_every_n_epoch=1 
+#     )
+    
+#     # 训练模型
+#     trainer.fit(model, datamodule=dm)
+    
+#     # 测试模型
+#     trainer.test(model, datamodule=dm)
+    
+#     # 打印最佳模型路径
+#     print(f"最佳模型保存在: {checkpoint_callback.best_model_path}")
 
 if __name__ == '__main__':
     main()
